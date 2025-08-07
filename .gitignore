@@ -12,3 +12,5 @@ models/*.h5
 models/*.h5
 models/*.json
 models/*.json
+models/*.joblib
+results/*.xlsx

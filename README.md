@@ -83,3 +83,12 @@ All projects are licensed under MIT unless specified otherwise in their respecti
 
 
 
+
+
+Advanced Projects
+
+These projects demonstrate cutting-edge techniques, advanced algorithms, and comprehensive data analysis.
+
+Brain Cancer Classifier: A Python script for classifying brain cancer outcomes using Gradient Boosting. Features advanced feature selection, UMAP visualization, SHAP interpretation, and detailed metrics. [Read more](Advanced-Projects/brain-cancer-classifier/README.md)
+
+(Add more advanced projects here as they are created.)
