@@ -3,4 +3,4 @@ Python
 Environments
 .env.venvenv/venv/ENV/
 Other
-*.log*.pot*.joblib
+*.log*.pot*.joblibspeech_translation_history.json
