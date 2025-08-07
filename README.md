@@ -14,7 +14,9 @@ Translator App: A Python script for translating text to multiple languages using
 
 Voice Command App: A Python script that uses speech recognition to process voice commands (e.g., open Google Chrome) in Persian or other languages. Includes CLI and cross-platform support. [Read more](Simple-Projects/voice-command-app/README.md)
 
-Speech-to-Text-to-Speech Translator: A Python script that converts spoken input to text, translates it, and speaks the translation. Features CLI, history tracking, and cross-platform support. [Read more](Simple-Projects/speech-translator/README.md)
+Speech-to-Text-to-Speech Translator: A Python script that converts spoken input to text, translates it, and speaks the translation. Features CLI, history tracking, and TTS. [Read more](Simple-Projects/speech-translator/README.md)
+
+Face Tracker: A Python script for real-time face and eye detection using OpenCV, with mouse control based on face position. Includes CLI for customization and smoothing. [Read more](Simple-Projects/face-tracker/README.md)
 
 Weather App: A Python script that fetches and displays current weather for any city using the OpenWeatherMap API. [Read more](Simple-Projects/weather-app/README.md)
 
@@ -63,6 +65,7 @@ I'm \[Your Name], an aspiring developer passionate about creating meaningful sof
 License
 
 All projects are licensed under MIT unless specified otherwise in their respective READMEs.
+
 
 
 
