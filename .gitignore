@@ -4,3 +4,4 @@ Environments
 .env.venvenv/venv/ENV/
 Other
 *.log*.pot*.joblibspeech_translation_history.json
+speech_history.json

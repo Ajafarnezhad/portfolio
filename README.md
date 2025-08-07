@@ -18,6 +18,8 @@ Speech-to-Text-to-Speech Translator: A Python script that converts spoken input 
 
 Face Tracker: A Python script for real-time face and eye detection using OpenCV, with mouse control based on face position. Includes CLI for customization and smoothing. [Read more](Simple-Projects/face-tracker/README.md)
 
+Speech Recognizer: A Python script for converting spoken input to text using Google Speech Recognition API. Features CLI, history tracking, and multi-language support. [Read more](Simple-Projects/speech-recognizer/README.md)
+
 Weather App: A Python script that fetches and displays current weather for any city using the OpenWeatherMap API. [Read more](Simple-Projects/weather-app/README.md)
 
 Rock, Paper, Scissors: A Python game where you play Rock, Paper, Scissors against the computer with a customizable winning score. [Read more](Simple-Projects/rock-paper-scissors/README.md)
@@ -65,6 +67,7 @@ I'm \[Your Name], an aspiring developer passionate about creating meaningful sof
 License
 
 All projects are licensed under MIT unless specified otherwise in their respective READMEs.
+
 
 
 
