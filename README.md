@@ -8,19 +8,19 @@ Simple Projects
 
 These projects demonstrate fundamental programming concepts and are great for beginners or quick implementations.
 
+Age Calculator: A Python script that calculates age in years, months, days, hours, and seconds based on birth date. Includes CLI input, logging, and error handling. [Read more](Simple-Projects/age-calculator/README.md)
 
+Translator App: A Python script for translating text to multiple languages using Google Translate API. Features CLI, history tracking, and supported language listing. [Read more](Simple-Projects/translator-app/README.md)
 
-Age Calculator: A Python script that calculates age in years, months, days, hours, and seconds based on birth date. Read more
+Voice Command App: A Python script that uses speech recognition to process voice commands (e.g., open Google Chrome) in Persian or other languages. Includes CLI and cross-platform support. [Read more](Simple-Projects/voice-command-app/README.md)
 
-Weather App: A Python script that fetches and displays current weather for any city using the OpenWeatherMap API. Read more
+Weather App: A Python script that fetches and displays current weather for any city using the OpenWeatherMap API. [Read more](Simple-Projects/weather-app/README.md)
 
-Rock, Paper, Scissors: A Python game where you play Rock, Paper, Scissors against the computer with a customizable winning score. Read more
+Rock, Paper, Scissors: A Python game where you play Rock, Paper, Scissors against the computer with a customizable winning score. [Read more](Simple-Projects/rock-paper-scissors/README.md)
 
-Love Bot: A Python script that automates typing and sending love messages, with custom or random message options. Read more
+Love Bot: A Python script that automates typing and sending love messages, with custom or random message options. [Read more](Simple-Projects/love-bot/README.md)
 
-Barcode Generator: A Python script that generates QR codes for URLs, text, or vCard contact information with customizable appearance. Read more
-
-
+Barcode Generator: A Python script that generates QR codes for URLs, text, or vCard contact information with customizable appearance. [Read more](Simple-Projects/barcode-generator/README.md)
 
 (Add more simple projects here as they are created.)
 
@@ -61,4 +61,5 @@ I'm \[Your Name], an aspiring developer passionate about creating meaningful sof
 License
 
 All projects are licensed under MIT unless specified otherwise in their respective READMEs.
+
 
