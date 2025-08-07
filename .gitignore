@@ -1,19 +1,6 @@
-# Python
-*.pyc
-*.pyo
-*.pyd
-__pycache__/
-*.py[cd]
-*.pyi
-*$py.class
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-
-# Other
-*.log
-*.pot
+Python
+*.pyc*.pyo*.pydpycache/*.py[cd]*.pyi*$py.class
+Environments
+.env.venvenv/venv/ENV/
+Other
+*.log*.pot*.joblib
