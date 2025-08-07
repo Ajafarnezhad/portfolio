@@ -5,3 +5,5 @@ Environments
 Other
 *.log*.pot*.joblibspeech_translation_history.json
 speech_history.json
+models/*.h5
+models/*.joblib
