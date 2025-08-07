@@ -7,3 +7,4 @@ Other
 speech_history.json
 models/*.h5
 models/*.joblib
+models/*.h5
