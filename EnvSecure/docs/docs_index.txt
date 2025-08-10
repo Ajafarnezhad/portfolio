@@ -1,0 +1,17 @@
+EnvSecure Documentation
+=======================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+Modules
+-------
+
+.. automodule:: envsecure.core
+   :members:
+   :undoc-members:
+
+.. automodule:: envsecure.cli
+   :members:
+   :undoc-members:
