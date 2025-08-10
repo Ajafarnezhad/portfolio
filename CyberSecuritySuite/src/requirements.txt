@@ -1,0 +1,9 @@
+Flask==3.0.3
+flask-jwt-extended==4.6.0
+flask-limiter==3.8.0
+reportlab==4.2.2
+cryptography==43.0.1
+safety==3.2.6  # For dependency scanning
+bandit==1.7.9  # For static analysis
+pytest==8.3.2
+sphinx==8.0.2
