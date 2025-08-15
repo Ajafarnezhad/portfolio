@@ -1,94 +1,18 @@
-My Portfolio
-
-Welcome to my personal projects portfolio! This repository showcases my programming projects, organized by complexity into Simple, Intermediate, and Advanced categories. Each project resides in its own folder with a dedicated README for details. Feel free to explore, fork, or contribute!
-
-Project Categories
-
-Simple Projects
-
-These projects demonstrate fundamental programming concepts and are great for beginners or quick implementations.
-
-Age Calculator: A Python script that calculates age in years, months, days, hours, and seconds based on birth date. Includes CLI input, logging, and error handling. [Read more](Simple-Projects/age-calculator/README.md)
-
-Translator App: A Python script for translating text to multiple languages using Google Translate API. Features CLI, history tracking, and supported language listing. [Read more](Simple-Projects/translator-app/README.md)
-
-Voice Command App: A Python script that uses speech recognition to process voice commands (e.g., open Google Chrome) in Persian or other languages. Includes CLI and cross-platform support. [Read more](Simple-Projects/voice-command-app/README.md)
-
-Speech-to-Text-to-Speech Translator: A Python script that converts spoken input to text, translates it, and speaks the translation. Features CLI, history tracking, and TTS. [Read more](Simple-Projects/speech-translator/README.md)
-
-Face Tracker: A Python script for real-time face and eye detection using OpenCV, with mouse control based on face position. Includes CLI for customization and smoothing. [Read more](Simple-Projects/face-tracker/README.md)
-
-Speech Recognizer: A Python script for converting spoken input to text using Google Speech Recognition API. Features CLI, history tracking, and multi-language support. [Read more](Simple-Projects/speech-recognizer/README.md)
-
-Weather App: A Python script that fetches and displays current weather for any city using the OpenWeatherMap API. [Read more](Simple-Projects/weather-app/README.md)
-
-Rock, Paper, Scissors: A Python game where you play Rock, Paper, Scissors against the computer with a customizable winning score. [Read more](Simple-Projects/rock-paper-scissors/README.md)
-
-Love Bot: A Python script that automates typing and sending love messages, with custom or random message options. [Read more](Simple-Projects/love-bot/README.md)
-
-Barcode Generator: A Python script that generates QR codes for URLs, text, or vCard contact information with customizable appearance. [Read more](Simple-Projects/barcode-generator/README.md)
-
-(Add more simple projects here as they are created.)
-
-Intermediate Projects
-
-These projects involve more complex logic, data structures, or integrations. (Coming soon!)
-
-(Add intermediate projects here as they are created.)
-
-Advanced Projects
-
-These projects showcase advanced techniques, such as full-stack applications or optimized algorithms. (Coming soon!)
-
-(Add advanced projects here as they are created.)
-
-How to Run Projects
-
-Each project has its own README with instructions. Generally:
+# 💫 About Me:
+🔭 I’m currently diving deep into<br>   cutting-edge AI projects, where I’m harnessing the power of deep learning and natural language processing to create innovative solutions.<br><br>👯 I’m eager to collaborate on<br>   exciting machine learning ventures and data science challenges that push the boundaries of what's possible—let's turn ideas into reality!<br><br>🤝 I’m seeking help with<br>   fine-tuning my deep learning models and exploring new techniques to boost their performance and reliability.<br><br>🌱 I’m on a journey to learn<br>   the latest advancements in reinforcement learning and data mining tools that can revolutionize the way we analyze and interpret data.<br><br>💬 Feel free to ask me about<br>   the transformative impact of AI across various sectors, or let's chat about the fascinating hurdles of modern data science.<br><br>⚡ Fun fact<br>   I once built an AI chatbot that not only conversed with users but also learned from interactions—essentially, it grew its own personality!<br>
 
 
+# 💻 Tech Stack:
+![R](https://img.shields.io/badge/r-%23276DC3.svg?style=flat&logo=r&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54) ![PowerShell](https://img.shields.io/badge/PowerShell-%235391FE.svg?style=flat&logo=powershell&logoColor=white) ![Windows Terminal](https://img.shields.io/badge/Windows%20Terminal-%234D4D4D.svg?style=flat&logo=windows-terminal&logoColor=white) ![Azure](https://img.shields.io/badge/azure-%230072C6.svg?style=flat&logo=microsoftazure&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=flat&logo=amazon-aws&logoColor=white) ![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=flat&logo=Cloudflare&logoColor=white) ![Anaconda](https://img.shields.io/badge/Anaconda-%2344A833.svg?style=flat&logo=anaconda&logoColor=white) ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=flat&logo=django&logoColor=white) ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=flat&logo=flask&logoColor=white) ![Fastify](https://img.shields.io/badge/fastify-%23000000.svg?style=flat&logo=fastify&logoColor=white) ![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=flat&logo=Flutter&logoColor=white) ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=flat&logo=opencv&logoColor=white) ![Qt](https://img.shields.io/badge/Qt-%23217346.svg?style=flat&logo=Qt&logoColor=white) ![SASS](https://img.shields.io/badge/SASS-hotpink.svg?style=flat&logo=SASS&logoColor=white) ![Stylus](https://img.shields.io/badge/stylus-%23ff6347.svg?style=flat&logo=stylus&logoColor=white) ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=flat&logo=mysql&logoColor=white) ![Keras](https://img.shields.io/badge/Keras-%23D00000.svg?style=flat&logo=Keras&logoColor=white) ![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=flat&logo=Matplotlib&logoColor=black) ![mlflow](https://img.shields.io/badge/mlflow-%23d9ead3.svg?style=flat&logo=numpy&logoColor=blue) ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=flat&logo=numpy&logoColor=white) ![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=flat&logo=TensorFlow&logoColor=white) ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=flat&logo=pandas&logoColor=white) ![Plotly](https://img.shields.io/badge/Plotly-%233F4F75.svg?style=flat&logo=plotly&logoColor=white) ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white) ![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=flat&logo=scikit-learn&logoColor=white) ![Scipy](https://img.shields.io/badge/SciPy-%230C55A5.svg?style=flat&logo=scipy&logoColor=%white) ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=flat&logo=github&logoColor=white) ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=flat&logo=git&logoColor=white) ![GitLab](https://img.shields.io/badge/gitlab-%23181717.svg?style=flat&logo=gitlab&logoColor=white) ![GitLab CI](https://img.shields.io/badge/gitlab%20CI-%23181717.svg?style=flat&logo=gitlab&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white) ![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=flat&logo=notion&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=flat&logo=postman&logoColor=white) ![Power Bi](https://img.shields.io/badge/power_bi-F2C811?style=flat&logo=powerbi&logoColor=black) ![Raspberry Pi](https://img.shields.io/badge/-Raspberry_Pi-C51A4A?style=flat&logo=Raspberry-Pi) ![Trello](https://img.shields.io/badge/Trello-%23026AA7.svg?style=flat&logo=Trello&logoColor=white)
+# 📊 GitHub Stats:
+![](https://github-readme-stats.vercel.app/api?username=Ajafarnezhad&theme=shadow_blue&hide_border=false&include_all_commits=false&count_private=false)<br/>
+![](https://nirzak-streak-stats.vercel.app/?user=Ajafarnezhad&theme=shadow_blue&hide_border=false)<br/>
+![](https://github-readme-stats.vercel.app/api/top-langs/?username=Ajafarnezhad&theme=shadow_blue&hide_border=false&include_all_commits=false&count_private=false&layout=compact)
 
-Clone this repository:git clone https://github.com/Ajafarnezhad/portfolio.git
+### 🔝 Top Contributed Repo
+![](https://github-contributor-stats.vercel.app/api?username=Ajafarnezhad&limit=5&theme=shadow_blue&combine_all_yearly_contributions=true)
 
+---
+[![](https://visitcount.itsvg.in/api?id=Ajafarnezhad&icon=0&color=0)](https://visitcount.itsvg.in)
 
-
-
-
-Navigate to the project folder (e.g., Simple-Projects/barcode-generator).
-
-Follow the instructions in the project's README.
-
-
-
-About Me
-
-I'm \[Your Name], an aspiring developer passionate about creating meaningful software solutions. Check my GitHub profile for more: Ajafarnezhad
-
-License
-
-All projects are licensed under MIT unless specified otherwise in their respective READMEs.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Advanced Projects
-
-These projects demonstrate cutting-edge techniques, advanced algorithms, and comprehensive data analysis.
-
-Brain Cancer Classifier: A Python script for classifying brain cancer outcomes using Gradient Boosting. Features advanced feature selection, UMAP visualization, SHAP interpretation, and detailed metrics. [Read more](Advanced-Projects/brain-cancer-classifier/README.md)
-
-(Add more advanced projects here as they are created.)
+<!-- Proudly created with GPRM ( https://gprm.itsvg.in ) -->
