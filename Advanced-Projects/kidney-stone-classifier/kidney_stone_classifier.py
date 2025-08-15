@@ -1,383 +1,419 @@
-#!/usr/bin/env python3
-"""
-Kidney Stone Classifier - Advanced Deep Learning Solution
+!pip install efficientnet-pytorch torch torchvision torcheval ultralytics -q
 
-This script implements a state-of-the-art deep learning pipeline for classifying kidney stone images
-using transfer learning with EfficientNet models, advanced augmentation, and interpretability tools.
-Designed for high accuracy in medical imaging tasks with robust validation and visualization.
+import kagglehub
 
-Author: Amirhossein jafarnezhad
-Date: August 10, 2025
-Version: 1.0.0
-"""
+# Download latest version
+path = kagglehub.dataset_download("imtkaggleteam/kidney-stone-classification-and-object-detection")
+print("Path to dataset files:", path)
 
-import argparse
-import logging
-import sys
+
+
 import os
-import shutil
-import tensorflow as tf
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization, GlobalAveragePooling2D
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TensorBoard
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.applications import EfficientNetB7, EfficientNetV2L
-from tensorflow.keras.applications.efficientnet import preprocess_input as effnet_preprocess
-from tensorflow.keras.applications.efficientnet_v2 import preprocess_input as effnetv2_preprocess
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, auc, classification_report
+import pandas as pd
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
+from efficientnet_pytorch import EfficientNet
+import torchvision.models as models
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sns
+from torcheval.metrics import BinaryAUROC
+import time
+import copy
 import cv2
-import numpy as np
-from typing import Optional, Tuple, Dict
-from PIL import Image
-import shap
-from lime import lime_image
-from skimage.segmentation import mark_boundaries
-import zipfile
-from kaggle.api.kaggle_api_extended import KaggleApi
-import mlflow
-import mlflow.tensorflow
+from ultralytics import YOLO
+import glob
 from datetime import datetime
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+# Set random seed for reproducibility
+torch.manual_seed(42)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(42)
 
-class KidneyStoneClassifier:
-    def __init__(self, model_path: str = "models/kidney_stone_classifier_model.h5", 
-                 dataset_dir: str = "kidney_stone_dataset", 
-                 log_dir: str = "logs/", 
-                 use_v2: bool = False):
-        """Initialize the KidneyStoneClassifier with advanced configurations."""
-        self.model_path = model_path
-        self.dataset_dir = dataset_dir
-        self.log_dir = log_dir
-        self.use_v2 = use_v2
-        self.img_height, self.img_width = 600, 600  # Optimized for EfficientNetB7/V2L
-        self.batch_size = 16  # Reduced for GPU memory efficiency
-        self.classes = ['Normal', 'Stone']
-        self.model = None
-        os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
-        os.makedirs(self.log_dir, exist_ok=True)
+# Define constants optimized for A100 GPU with minimum batch size 50
+DATA_PATH = "/root/.cache/kagglehub/datasets/imtkaggleteam/kidney-stone-classification-and-object-detection/versions/1"
+IMG_SIZE = 384
+MIN_BATCH_SIZE = 50  # Minimum batch size requirement
+BATCH_SIZE = max(64, MIN_BATCH_SIZE)  # Ensure at least 50, default to 64 for A100
+EPOCHS = 15
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+SAVE_DIR = "saved_models"
+os.makedirs(SAVE_DIR, exist_ok=True)
 
-    def download_dataset(self) -> None:
-        """Download and extract the kidney stone dataset from Kaggle."""
-        if not os.path.exists(self.dataset_dir):
-            logger.info("Initiating dataset download from Kaggle...")
-            api = KaggleApi()
-            api.authenticate()
-            api.dataset_download_files("vivektalwar13071999/finalsplit", path=self.dataset_dir, unzip=True)
-            logger.info("Dataset downloaded and extracted successfully.")
-        else:
-            logger.info("Dataset already exists, skipping download.")
+# ------------------- Image Classification -------------------
 
-    def load_data(self) -> Tuple[ImageDataGenerator, ImageDataGenerator, ImageDataGenerator]:
-        """Load and preprocess the kidney stone dataset with advanced augmentation."""
-        train_datagen = ImageDataGenerator(
-            preprocessing_function=effnetv2_preprocess if self.use_v2 else effnet_preprocess,
-            rotation_range=30,
-            width_shift_range=0.3,
-            height_shift_range=0.3,
-            shear_range=0.3,
-            zoom_range=0.3,
-            horizontal_flip=True,
-            vertical_flip=True,
-            brightness_range=[0.8, 1.2],
-            fill_mode='reflect',
-            validation_split=0.2
-        )
+# Custom Dataset for Classification
+class KidneyStoneClassificationDataset(Dataset):
+    def __init__(self, dataframe, transform=None):
+        self.dataframe = dataframe
+        self.transform = transform
+        self.classes = {'Normal': 0, 'stone': 1}
 
-        train_generator = train_datagen.flow_from_directory(
-            self.dataset_dir,
-            target_size=(self.img_height, self.img_width),
-            batch_size=self.batch_size,
-            class_mode='binary',
-            subset='training'
-        )
+    def __len__(self):
+        return len(self.dataframe)
 
-        validation_generator = train_datagen.flow_from_directory(
-            self.dataset_dir,
-            target_size=(self.img_height, self.img_width),
-            batch_size=self.batch_size,
-            class_mode='binary',
-            subset='validation'
-        )
+    def __getitem__(self, idx):
+        img_path = self.dataframe.iloc[idx]['file_path']
+        label = self.classes[self.dataframe.iloc[idx]['label']]
+        image = Image.open(img_path).convert('RGB')
 
-        test_datagen = ImageDataGenerator(preprocessing_function=effnetv2_preprocess if self.use_v2 else effnet_preprocess)
-        test_generator = test_datagen.flow_from_directory(
-            self.dataset_dir,
-            target_size=(self.img_height, self.img_width),
-            batch_size=self.batch_size,
-            class_mode='binary',
-            shuffle=False
-        )
+        if self.transform:
+            image = self.transform(image)
 
-        logger.info(f"Loaded data: Train {train_generator.samples}, Validation {validation_generator.samples}, Test {test_generator.samples}")
-        return train_generator, validation_generator, test_generator
+        return image, label
 
-    def build_model(self) -> Sequential:
-        """Build a state-of-the-art CNN model using EfficientNetB7 or EfficientNetV2L with fine-tuning."""
-        if self.use_v2:
-            base_model = EfficientNetV2L(weights='imagenet', include_top=False, input_shape=(self.img_height, self.img_width, 3))
-        else:
-            base_model = EfficientNetB7(weights='imagenet', include_top=False, input_shape=(self.img_height, self.img_width, 3))
+# Data Preprocessing and Augmentation for Classification
+train_transforms = transforms.Compose([
+    transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomVerticalFlip(p=0.5),
+    transforms.RandomRotation(20),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+    transforms.RandomResizedCrop(IMG_SIZE, scale=(0.8, 1.0)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
 
-        # Unfreeze top layers for fine-tuning
-        for layer in base_model.layers[-20:]:
-            layer.trainable = True
+val_transforms = transforms.Compose([
+    transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
 
-        model = Sequential([
-            base_model,
-            GlobalAveragePooling2D(),
-            Dense(1024, activation='relu'),
-            BatchNormalization(),
-            Dropout(0.6),
-            Dense(512, activation='relu'),
-            BatchNormalization(),
-            Dropout(0.4),
-            Dense(256, activation='relu'),
-            BatchNormalization(),
-            Dropout(0.3),
-            Dense(1, activation='sigmoid')
-        ])
+# Load Classification Dataset
+def prepare_classification_dataset(data_path):
+    file_paths = []
+    labels = []
+    class_names = ['Normal', 'stone']
 
-        model.compile(optimizer=Adam(learning_rate=0.0005), loss='binary_crossentropy', 
-                      metrics=['accuracy', tf.keras.metrics.AUC(), tf.keras.metrics.Precision(), tf.keras.metrics.Recall()])
-        logger.info("Advanced CNN model built and compiled with fine-tuning.")
-        return model
+    for class_name in class_names:
+        folder_path = os.path.join(data_path, class_name)
+        if not os.path.exists(folder_path):
+            raise FileNotFoundError(f"Classification folder {folder_path} does not exist")
+        for img_name in os.listdir(folder_path):
+            file_paths.append(os.path.join(folder_path, img_name))
+            labels.append(class_name)
 
-    def train_model(self, epochs: int = 100, validation_split: float = 0.2) -> None:
-        """Train the model with MLflow tracking and advanced callbacks."""
-        train_generator, validation_generator, test_generator = self.load_data()
+    df = pd.DataFrame({'file_path': file_paths, 'label': labels})
+    return df
 
-        self.model = self.build_model()
-        
-        # Set up MLflow
-        mlflow.set_experiment("Kidney_Stone_Classifier")
-        with mlflow.start_run():
-            # Log parameters
-            mlflow.log_params({
-                "epochs": epochs,
-                "batch_size": self.batch_size,
-                "model_type": "EfficientNetV2L" if self.use_v2 else "EfficientNetB7",
-                "img_size": (self.img_height, self.img_width)
-            })
+# Split Dataset
+def split_dataset(df):
+    train_size = int(0.7 * len(df))
+    val_size = int(0.15 * len(df))
+    test_size = len(df) - train_size - val_size
+    train_df = df.sample(frac=1, random_state=42).reset_index(drop=True)[:train_size]
+    val_df = df.sample(frac=1, random_state=42).reset_index(drop=True)[train_size:train_size+val_size]
+    test_df = df.sample(frac=1, random_state=42).reset_index(drop=True)[train_size+val_size:]
+    return train_df, val_df, test_df
 
-            # Callbacks
-            callbacks = [
-                EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True, verbose=1),
-                ModelCheckpoint(self.model_path, monitor='val_accuracy', save_best_only=True, verbose=1),
-                ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=0.00001, verbose=1),
-                TensorBoard(log_dir=self.log_dir, histogram_freq=1, write_graph=True)
-            ]
-            
-            # Train the model
-            history = self.model.fit(
-                train_generator,
-                validation_data=validation_generator,
-                epochs=epochs,
-                callbacks=callbacks,
-                verbose=1
-            )
-            logger.info("Model training completed with MLflow tracking.")
-            
-            # Log metrics
-            val_accuracy = max(history.history['val_accuracy'])
-            mlflow.log_metric("val_accuracy", val_accuracy)
-            logger.info(f"Logged validation accuracy: {val_accuracy:.4f}")
-            
-            # Evaluate and visualize
-            self._evaluate_and_plot(history.history, test_generator)
+# Load Classification Models
+def load_classification_model(model_name):
+    if model_name == "efficientnet":
+        model = EfficientNet.from_pretrained('efficientnet-b3')
+        model._fc = nn.Linear(model._fc.in_features, 1)
+    elif model_name == "resnet":
+        model = models.resnet101(weights='IMAGENET1K_V1')
+        model.fc = nn.Linear(model.fc.in_features, 1)
+    elif model_name == "densenet":
+        model = models.densenet161(weights='IMAGENET1K_V1')
+        model.classifier = nn.Linear(model.classifier.in_features, 1)
+    else:
+        raise ValueError(f"Unsupported classification model: {model_name}")
 
-    def load_trained_model(self) -> None:
-        """Load a pre-trained model with error handling and validation."""
-        try:
-            self.model = load_model(self.model_path, compile=True)
-            logger.info(f"Loaded model from {self.model_path} with compilation.")
-            # Validate model architecture
-            self.model.summary()
-        except FileNotFoundError:
-            logger.error(f"Model file '{self.model_path}' not found. Train the model first.")
-            sys.exit(1)
-        except Exception as e:
-            logger.error(f"Error loading model: {e}")
-            sys.exit(1)
+    model = model.to(DEVICE)
+    return model
 
-    def predict(self, image_path: str) -> Optional[Dict[str, float]]:
-        """Predict kidney stone presence with confidence scores and visualization."""
-        if self.model is None:
-            self.load_trained_model()
-        
-        try:
-            img = cv2.imread(image_path)
-            if img is None:
-                raise ValueError(f"Could not load image from {image_path}")
-            img = cv2.resize(img, (self.img_height, self.img_width))
-            img = img.astype('float32')
-            if self.use_v2:
-                img = effnetv2_preprocess(img)
-            else:
-                img = effnet_preprocess(img)
-            img = np.expand_dims(img, axis=0)
-            
-            prediction = self.model.predict(img, verbose=0)[0][0]
-            predicted_class = 'Stone' if prediction > 0.5 else 'Normal'
-            confidence = prediction if predicted_class == 'Stone' else (1 - prediction)
-            
-            # Visualize prediction
-            plt.figure(figsize=(6, 6))
-            plt.imshow(Image.open(image_path))
-            plt.title(f"Prediction: {predicted_class} (Confidence: {confidence:.2f})")
-            plt.axis('off')
-            plt.savefig(os.path.join(self.plot_dir, f"prediction_{os.path.basename(image_path)}"))
-            plt.close()
-            
-            result = {
-                "class": predicted_class,
-                "confidence": float(confidence),
-                "probability_stone": float(prediction),
-                "probability_normal": float(1 - prediction)
-            }
-            logger.info(f"Predicted: {result}")
-            return result
-        except Exception as e:
-            logger.error(f"Error during prediction: {e}")
-            return None
+# Training Function for Classification with Model Saving and Batch Optimization
+def train_classification_model(model, train_loader, val_loader, criterion, optimizer, scheduler, num_epochs, model_name):
+    scaler = torch.cuda.amp.GradScaler()
+    best_acc = 0.0
+    best_model_wts = copy.deepcopy(model.state_dict())
+    history = {'train_loss': [], 'val_loss': [], 'train_acc': [], 'val_acc': [], 'val_auroc': []}
 
-    def _evaluate_and_plot(self, history: dict, test_generator: tf.keras.preprocessing.image.DirectoryIterator) -> None:
-        """Evaluate the model with comprehensive metrics and advanced visualizations."""
-        # Evaluate
-        test_loss, test_accuracy, test_auc, test_precision, test_recall = self.model.evaluate(test_generator, verbose=0)
-        logger.info(f"Test Results - Accuracy: {test_accuracy:.4f}, Loss: {test_loss:.4f}, AUC: {test_auc:.4f}, "
-                    f"Precision: {test_precision:.4f}, Recall: {test_recall:.4f}")
-        
-        # Predictions for detailed metrics
-        y_pred_prob = self.model.predict(test_generator, verbose=0)
-        y_pred = (y_pred_prob > 0.5).astype(int)
-        y_true = test_generator.classes
-        
-        # Classification Report
-        report = classification_report(y_true, y_pred, target_names=self.classes, output_dict=True)
-        report_df = pd.DataFrame(report).transpose()
-        display(report_df.style.background_gradient(cmap='Blues'))
-        logger.info("Displayed detailed classification report.")
-        
-        # Confusion Matrix
-        cm = confusion_matrix(y_true, y_pred)
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=self.classes, yticklabels=self.classes)
-        plt.title("Confusion Matrix")
-        plt.xlabel("Predicted")
-        plt.ylabel("True")
-        plt.savefig(os.path.join(self.plot_dir, "confusion_matrix.png"))
-        plt.close()
-        logger.info("Saved confusion matrix plot.")
-        
-        # Training History
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 6))
-        ax1.plot(history['accuracy'], label='Training Accuracy')
-        ax1.plot(history['val_accuracy'], label='Validation Accuracy')
-        ax1.set_title("Model Accuracy")
-        ax1.set_xlabel("Epoch")
-        ax1.set_ylabel("Accuracy")
-        ax1.legend()
-        
-        ax2.plot(history['loss'], label='Training Loss')
-        ax2.plot(history['val_loss'], label='Validation Loss')
-        ax2.set_title("Model Loss")
-        ax2.set_xlabel("Epoch")
-        ax2.set_ylabel("Loss")
-        ax2.legend()
-        plt.savefig(os.path.join(self.plot_dir, "training_history.png"))
-        plt.close()
-        logger.info("Saved training history plot.")
-        
-        # ROC Curve
-        fpr, tpr, _ = roc_curve(y_true, y_pred_prob)
-        roc_auc = auc(fpr, tpr)
-        plt.figure(figsize=(8, 6))
-        plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plt.title("ROC Curve")
-        plt.legend(loc="lower right")
-        plt.savefig(os.path.join(self.plot_dir, "roc_curve.png"))
-        plt.close()
-        logger.info("Saved ROC curve plot.")
+    for epoch in range(num_epochs):
+        start_time = time.time()
+        print(f'Epoch {epoch+1}/{num_epochs}')
 
-    def explain_prediction(self, image_path: str, explainer_type: str = "shap") -> None:
-        """Provide model interpretability using SHAP or LIME with high-resolution output."""
-        if self.model is None:
-            self.load_trained_model()
-        
-        img = cv2.imread(image_path)
-        img = cv2.resize(img, (self.img_height, self.img_width))
-        img = img.astype('float32')
-        if self.use_v2:
-            img = effnetv2_preprocess(img)
-        else:
-            img = effnet_preprocess(img)
-        img = np.expand_dims(img, axis=0)
-        
-        if explainer_type == "shap":
-            explainer = shap.DeepExplainer(self.model, img)
-            shap_values = explainer.shap_values(img)
-            shap.image_plot(shap_values, -img, show=False)
-            plt.savefig(os.path.join(self.plot_dir, "shap_explanation.png"), dpi=300)
-            plt.close()
-            logger.info("Saved high-resolution SHAP explanation plot.")
-        elif explainer_type == "lime":
-            explainer = lime_image.LimeImageExplainer()
-            explanation = explainer.explain_instance(img[0], self.model.predict, top_labels=2, hide_color=0, num_samples=2000)
-            temp, mask = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=10, hide_rest=True)
-            plt.figure(figsize=(10, 10))
-            plt.imshow(mark_boundaries(temp / 2 + 0.5, mask))
-            plt.title("LIME Explanation")
-            plt.axis('off')
-            plt.savefig(os.path.join(self.plot_dir, "lime_explanation.png"), dpi=300, bbox_inches='tight')
-            plt.close()
-            logger.info("Saved high-resolution LIME explanation plot.")
+        # Training phase with gradient accumulation for larger batches
+        model.train()
+        running_loss = 0.0
+        running_corrects = 0
+        total = 0
+        accumulation_steps = max(1, BATCH_SIZE // MIN_BATCH_SIZE)  # Adjust for minimum batch size
 
-def parse_arguments() -> argparse.Namespace:
-    """Parse command-line arguments with validation."""
-    parser = argparse.ArgumentParser(description="Advanced Kidney Stone Classifier using Deep Learning.")
-    parser.add_argument("--mode", type=str, choices=["train", "predict", "explain"], required=True,
-                        help="Mode: 'train' to train model, 'predict' for inference, 'explain' for interpretability.")
-    parser.add_argument("--model_path", type=str, default="models/kidney_stone_classifier_model.h5",
-                        help="Path to save/load the model.")
-    parser.add_argument("--dataset_dir", type=str, default="kidney_stone_dataset",
-                        help="Path to the dataset directory.")
-    parser.add_argument("--use_v2", action="store_true",
-                        help="Use EfficientNetV2L instead of EfficientNetB7.")
-    parser.add_argument("--epochs", type=int, default=100,
-                        help="Number of epochs for training.")
-    parser.add_argument("--batch_size", type=int, default=16,
-                        help="Batch size for training.")
-    parser.add_argument("--image_path", type=str,
-                        help="Path to image for prediction/explanation (required in predict/explain mode).")
-    parser.add_argument("--explainer_type", type=str, choices=["shap", "lime"], default="shap",
-                        help="Explainer type for explain mode.")
-    args = parser.parse_args()
-    if args.mode in ["predict", "explain"] and not args.image_path:
-        parser.error("argument --image_path is required for predict or explain modes")
-    return args
+        for i, (inputs, labels) in enumerate(train_loader):
+            inputs, labels = inputs.to(DEVICE), labels.to(DEVICE).float()
+            batch_size = inputs.size(0)
+
+            optimizer.zero_grad()
+            with torch.cuda.amp.autocast():
+                outputs = model(inputs).squeeze()
+                loss = criterion(outputs, labels) / accumulation_steps
+            scaler.scale(loss).backward()
+
+            if (i + 1) % accumulation_steps == 0 or (i + 1) == len(train_loader):
+                scaler.step(optimizer)
+                scaler.update()
+
+            running_loss += loss.item() * inputs.size(0) * accumulation_steps
+            preds = (torch.sigmoid(outputs) > 0.5).float()
+            running_corrects += torch.sum(preds == labels)
+            total += batch_size
+
+        train_loss = running_loss / total
+        train_acc = running_corrects.double() / total
+        history['train_loss'].append(train_loss)
+        history['train_acc'].append(train_acc.item())
+
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        val_corrects = 0
+        val_total = 0
+        all_preds = []
+        all_labels = []
+
+        with torch.no_grad():
+            for inputs, labels in val_loader:
+                inputs, labels = inputs.to(DEVICE), labels.to(DEVICE).float()
+                with torch.cuda.amp.autocast():
+                    outputs = model(inputs).squeeze()
+                    loss = criterion(outputs, labels)
+                val_loss += loss.item() * inputs.size(0)
+                preds = (torch.sigmoid(outputs) > 0.5).float()
+                val_corrects += torch.sum(preds == labels)
+                val_total += labels.size(0)
+                all_preds.extend(torch.sigmoid(outputs).cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
+
+        val_loss = val_loss / val_total
+        val_acc = val_corrects.double() / val_total
+        auroc_metric = BinaryAUROC()
+        auroc_metric.update(torch.tensor(all_preds), torch.tensor(all_labels))
+        val_auroc = auroc_metric.compute().item()
+
+        history['val_loss'].append(val_loss)
+        history['val_acc'].append(val_acc.item())
+        history['val_auroc'].append(val_auroc)
+
+        if val_acc > best_acc:
+            best_acc = val_acc
+            best_model_wts = copy.deepcopy(model.state_dict())
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            save_path = os.path.join(SAVE_DIR, f"{model_name}_best_{timestamp}.pth")
+            torch.save(best_model_wts, save_path)
+            print(f"Saved best model to {save_path}")
+
+        scheduler.step()
+        print(f'Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}')
+        print(f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}, Val AUROC: {val_auroc:.4f}')
+        print(f'Time: {time.time() - start_time:.2f}s\n')
+
+    model.load_state_dict(best_model_wts)
+    return model, history
+
+# Evaluate Classification Model
+def evaluate_classification_model(model, test_loader, model_name):
+    model.eval()
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():
+        for inputs, labels in test_loader:
+            inputs, labels = inputs.to(DEVICE), labels.to(DEVICE).float()
+            with torch.cuda.amp.autocast():
+                outputs = model(inputs).squeeze()
+                preds = (torch.sigmoid(outputs) > 0.5).float()
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    print(f"\nClassification Report for {model_name.upper()}:")
+    print(classification_report(all_labels, all_preds, target_names=['Normal', 'Stone']))
+    
+    cm = confusion_matrix(all_labels, all_preds)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Normal', 'Stone'], yticklabels=['Normal', 'Stone'])
+    plt.title(f'Confusion Matrix for {model_name.upper()}')
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
+
+# Plot Classification History
+def plot_classification_history(history, model_name):
+    epochs = range(1, len(history['train_loss']) + 1)
+    plt.figure(figsize=(15, 5))
+
+    plt.subplot(1, 3, 1)
+    plt.plot(epochs, history['train_loss'], label='Train Loss')
+    plt.plot(epochs, history['val_loss'], label='Val Loss')
+    plt.title(f'{model_name} Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 3, 2)
+    plt.plot(epochs, history['train_acc'], label='Train Acc')
+    plt.plot(epochs, history['val_acc'], label='Val Acc')
+    plt.title(f'{model_name} Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    plt.subplot(1, 3, 3)
+    plt.plot(epochs, history['val_auroc'], label='Val AUROC')
+    plt.title(f'{model_name} AUROC')
+    plt.xlabel('Epoch')
+    plt.ylabel('AUROC')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+# ------------------- Object Detection -------------------
+
+# Custom Dataset for Object Detection (assuming YOLO format)
+class KidneyStoneDetectionDataset(Dataset):
+    def __init__(self, image_paths, annotation_dir, transform=None):
+        self.image_paths = image_paths
+        self.annotation_dir = annotation_dir
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        img_path = self.image_paths[idx]
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        ann_file = os.path.join(self.annotation_dir, os.path.basename(img_path).replace('.JPG', '.txt'))
+        boxes = []
+        if os.path.exists(ann_file):
+            with open(ann_file, 'r') as f:
+                for line in f:
+                    cls, x_center, y_center, width, height = map(float, line.strip().split())
+                    boxes.append([cls, x_center, y_center, width, height])
+
+        if self.transform:
+            img = self.transform(Image.fromarray(img))
+
+        return img, boxes, img_path
+
+# Convert YOLO annotations to bounding box coordinates
+def yolo_to_bbox(img_width, img_height, yolo_box):
+    cls, x_center, y_center, width, height = yolo_box
+    x_center, y_center, width, height = x_center * img_width, y_center * img_height, width * img_width, height * img_height
+    x_min = int(x_center - width / 2)
+    y_min = int(y_center - height / 2)
+    x_max = int(x_center + width / 2)
+    y_max = int(y_center + height / 2)
+    return cls, x_min, y_min, x_max, y_max
+
+# Visualize Bounding Boxes
+def visualize_bboxes(img_path, boxes, output_dir="output"):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_height, img_width = img.shape[:2]
+
+    for box in boxes:
+        cls, x_min, y_min, x_max, y_max = yolo_to_bbox(img_width, img_height, box)
+        cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+        cv2.putText(img, f"Stone: {cls:.0f}", (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, os.path.basename(img_path))
+    cv2.imwrite(output_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title("Detected Kidney Stones")
+    plt.show()
+
+# Prepare Object Detection Dataset
+def prepare_detection_dataset(data_path, annotation_dir):
+    image_paths = glob.glob(os.path.join(data_path, "stone/*.JPG"))
+    if not image_paths:
+        raise FileNotFoundError(f"No images found in {data_path}/stone")
+    if not os.path.exists(annotation_dir):
+        raise FileNotFoundError(f"Annotation directory {annotation_dir} does not exist")
+    return image_paths
+
+# Train YOLOv8 for Object Detection with Model Saving
+def train_yolo(data_path, annotation_dir):
+    model = YOLO('yolov8n.pt')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results = model.train(
+        data=data_path,
+        epochs=EPOCHS,
+        imgsz=IMG_SIZE,
+        batch=BATCH_SIZE,  # Ensure batch size meets minimum
+        device=DEVICE,
+        workers=4,
+        amp=True,
+        name=f'kidney_stone_yolo_{timestamp}',
+        save_dir=SAVE_DIR
+    )
+    model.save(os.path.join(SAVE_DIR, f"yolov8_best_{timestamp}.pt"))
+    print(f"Saved YOLOv8 model to {os.path.join(SAVE_DIR, f'yolov8_best_{timestamp}.pt')}")
+    return model
+
+# Main Execution
+def main():
+    # ------------------- Classification Pipeline -------------------
+    print("Starting Image Classification Pipeline...")
+    try:
+        df = prepare_classification_dataset(DATA_PATH)
+    except FileNotFoundError as e:
+        print(e)
+        return
+
+    train_df, val_df, test_df = split_dataset(df)
+    print(f"Classification Dataset: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+
+    train_dataset = KidneyStoneClassificationDataset(train_df, transform=train_transforms)
+    val_dataset = KidneyStoneClassificationDataset(val_df, transform=val_transforms)
+    test_dataset = KidneyStoneClassificationDataset(test_df, transform=val_transforms)
+
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+
+    models_list = ["efficientnet", "resnet", "densenet"]
+    for model_name in models_list:
+        print(f"\nTraining {model_name.upper()} model...")
+        model = load_classification_model(model_name)
+        criterion = nn.BCEWithLogitsLoss()
+        optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
+
+        model, history = train_classification_model(model, train_loader, val_loader, criterion, optimizer, scheduler, EPOCHS, model_name)
+        plot_classification_history(history, model_name.upper())
+        evaluate_classification_model(model, test_loader, model_name)
+
+    # ------------------- Object Detection Pipeline -------------------
+    print("\nStarting Object Detection Pipeline...")
+    annotation_dir = os.path.join(DATA_PATH, "annotations")
+    try:
+        image_paths = prepare_detection_dataset(DATA_PATH, annotation_dir)
+    except FileNotFoundError as e:
+        print(e)
+        return
+
+    train_size = int(0.8 * len(image_paths))
+    train_paths = image_paths[:train_size]
+    test_paths = image_paths[train_size:]
+
+    yolo_model = train_yolo(DATA_PATH, annotation_dir)
+
+    print("\nRunning Object Detection Inference...")
+    for img_path in test_paths[:5]:
+        results = yolo_model(img_path)
+        boxes = results[0].boxes.data.cpu().numpy()
+        visualize_bboxes(img_path, boxes)
 
 if __name__ == "__main__":
-    args = parse_arguments()
-    classifier = KidneyStoneClassifier(model_path=args.model_path, dataset_dir=args.dataset_dir, use_v2=args.use_v2)
-    
-    try:
-        if args.mode == "train":
-            classifier.download_dataset()
-            with mlflow.start_run():
-                classifier.train_model(epochs=args.epochs, validation_split=0.2)
-        elif args.mode == "predict":
-            result = classifier.predict(args.image_path)
-            if result:
-                print(f"Prediction Result: {result}")
-        elif args.mode == "explain":
-            classifier.explain_prediction(args.image_path, args.explainer_type)
-    except Exception as e:
-        logger.error(f"Execution failed: {e}")
-        sys.exit(1)
+    main()
