@@ -1,128 +1,107 @@
-\# Speech Recognizer
+# Speech Recognizer: Transform Your Voice into Text 🎙️✨
 
+Welcome to the **Speech Recognizer**, a simple yet powerful Python project that converts spoken input into text using the Google Speech Recognition API. With support for Persian and other languages, a robust CLI interface, and history tracking, this project is a stellar portfolio piece to showcase your skills in speech processing, error handling, and modular design.
 
+---
 
-\## Overview
+## 🌟 Project Highlights
+This project combines real-time speech recognition with user-friendly features like multi-language support and JSON-based history tracking. Featuring robust error handling and detailed logging, it’s perfect for demonstrating expertise in audio processing and interactive application development.
 
-This simple Python project captures spoken input via microphone and converts it to text using the Google Speech Recognition API. It features a robust CLI interface, history tracking in a JSON file, and support for multiple languages, making it an excellent portfolio piece for demonstrating speech processing, error handling, and modular design.
+---
 
+## 🚀 Features
+- **Speech Recognition**: Converts microphone audio to text in Persian or other languages using the Google Speech Recognition API.
+- **History Tracking**: Saves recognized text with timestamps to a JSON file and displays it in a formatted table using `pandas`.
+- **Multi-Language Support**: Easily configure and list supported languages for flexible speech recognition.
+- **CLI Interface**: Customize language, timeouts, and thresholds via intuitive command-line arguments.
+- **Error Handling**: Robustly handles microphone issues, API errors, and invalid inputs with clear feedback.
+- **Logging**: Detailed logs for debugging and monitoring recognition performance.
+- **Ambient Noise Adjustment**: Automatically adjusts for background noise to enhance recognition accuracy.
 
+---
 
-\## Features
+## 🛠️ Requirements
+- **Python**: 3.8 or higher
+- **Libraries**:
+  - `speechrecognition`
+  - `pyaudio`
+  - `pandas`
 
-\- \*\*Speech Recognition\*\*: Converts audio input to text in Persian (or other languages) using Google Speech Recognition API.
-
-\- \*\*History Tracking\*\*: Saves recognized text with timestamps to a JSON file and displays it in a formatted table.
-
-\- \*\*Multi-Language Support\*\*: Lists supported languages for easy configuration.
-
-\- \*\*CLI Interface\*\*: Configurable via command-line arguments for language, timeouts, and thresholds.
-
-\- \*\*Error Handling\*\*: Robust handling of microphone issues, API errors, and invalid inputs.
-
-\- \*\*Logging\*\*: Detailed logs for debugging and monitoring.
-
-\- \*\*Ambient Noise Adjustment\*\*: Automatically adjusts for background noise to improve recognition accuracy.
-
-
-
-\## Requirements
-
-\- Python 3.8+
-
-\- Libraries: `speechrecognition`, `pyaudio`, `pandas`
-
-
-
-Install dependencies:
-
+Install dependencies with:
 ```bash
-
 pip install speechrecognition pyaudio pandas
+```
 
+**Note**: `pyaudio` may require system dependencies like PortAudio. Install it with:
+- **macOS**: `brew install portaudio`
+- **Ubuntu**: `apt-get install portaudio19-dev`
+- **Windows**: Typically works out of the box, but check PortAudio documentation if needed.
 
+---
 
-How to Run
+## 🎮 How to Run
 
+### 1. Install Dependencies
+Ensure Python 3.8+ is installed and run:
+```bash
+pip install speechrecognition pyaudio pandas
+```
 
+### 2. Run the Script
+Launch the Speech Recognizer with default settings (Persian, 5s timeout, 10s phrase limit):
+```bash
+python speech_recognizer.py
+```
 
-Run with default settings (Persian, 5s timeout, 10s phrase limit):
+### 3. Customize Your Workflow
+Use optional CLI arguments for tailored recognition:
+```bash
+python speech_recognizer.py --language fa-IR --timeout 7 --phrase_limit 15
+```
+- `--language`: Set the recognition language (e.g., `fa-IR` for Persian, `en-US` for English).
+- `--timeout`: Microphone listening timeout in seconds (default: `5`).
+- `--phrase_limit`: Maximum phrase duration in seconds (default: `10`).
 
-bashpython speech\_recognizer.py
+### 4. Interact
+- Speak into your microphone when prompted.
+- View the recognized text and check the JSON history file for past transcriptions.
+- Press `Ctrl+C` to exit.
 
+---
 
+## 📈 Example Output
+- **Console**:
+  ```
+  INFO: Adjusting for ambient noise...
+  INFO: Listening for speech (language: fa-IR)...
+  Recognized: سلام، امروز روز خوبی است
+  INFO: Transcription saved to history.json
+  ```
+- **History Table** (displayed via `pandas`):
+  ```
+  Timestamp                 Text
+  2025-08-16 03:31:00      سلام، امروز روز خوبی است
+  ```
+- **JSON Output** (in `history.json`):
+  ```json
+  [
+    {"timestamp": "2025-08-16 03:31:00", "text": "سلام، امروز روز خوبی است"}
+  ]
+  ```
 
-Specify language or timeouts:
+---
 
-bashpython speech\_recognizer.py --language en-US --timeout 3 --phrase\_time\_limit 8
+## 🔮 Future Enhancements
+Take this project to the next level with these exciting ideas:
+- **Offline Recognition**: Integrate local models like Whisper for offline speech recognition.
+- **Web App Integration**: Build a Flask or Streamlit app for a browser-based interface.
+- **Real-Time Translation**: Add real-time text translation for multilingual outputs.
+- **Visualization**: Include audio waveform or spectrogram plots for recognized speech.
+- **Unit Testing**: Implement `pytest` for robust validation of recognition and history tracking.
 
+---
 
+## 📜 License
+This project is licensed under the **MIT License**—use, modify, and share it freely!
 
-List supported languages:
-
-bashpython speech\_recognizer.py --list\_languages
-
-
-
-Show recognition history:
-
-bashpython speech\_recognizer.py --show\_history
-
-
-
-
-
-Usage
-
-
-
-Use --language to set the recognition language (e.g., fa-IR for Persian, en-US for English).
-
-Use --timeout to set how long to wait for speech input.
-
-Use --phrase\_time\_limit to limit the duration of a single phrase.
-
-Use --energy\_threshold to adjust sensitivity to sound levels.
-
-Use --pause\_threshold to set the pause duration before stopping recording.
-
-Use --list\_languages to see supported languages.
-
-Use --show\_history to view past recognitions.
-
-History is saved in speech\_history.json.
-
-
-
-Example Output
-
-textINFO: Adjusting for ambient noise...
-
-INFO: Listening for speech...
-
-INFO: Processing audio...
-
-Recognized (fa-IR): سلام من مجید هستم
-
-History:
-
-textSpeech Recognition History:
-
-text                language  timestamp
-
-سلام من مجید هستم  fa-IR     2025-08-07 18:30:00
-
-Improvements and Future Work
-
-
-
-Add support for additional speech recognition APIs (e.g., Microsoft Azure, DeepSpeech).
-
-Implement a GUI with Tkinter or Streamlit for interactive use.
-
-Add audio recording and saving to WAV files.
-
-Support batch processing for multiple audio inputs.
-
-Unit tests with pytest for recognition and history functions.
-
+Transform your voice into text with the **Speech Recognizer** and showcase your audio processing skills! 🚀
