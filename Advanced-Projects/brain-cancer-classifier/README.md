@@ -26,7 +26,7 @@ Welcome to the **Brain Cancer Classifier**, a dazzling Python-powered machine le
 ## 🛠️ Get Started in a Flash
 1. Clone this bad boy:
    ```bash
-   git clone https://github.com/username/brain-cancer-classifier.git
+   git clone https://github.com/Ajafarnezhad/portfolio/Advanced-Projects/brain-cancer-classifier.git
    cd brain-cancer-classifier
    ```
 2. Summon the dependencies:
