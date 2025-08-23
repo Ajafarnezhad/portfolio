@@ -1,0 +1,170 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Cuisine Insights Report</title>
+    <!-- Including necessary CDNs for React, Recharts, and PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+    <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.15.0/Recharts.min.js"></script>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div id="root" class="container mx-auto p-4"></div>
+
+    <script type="text/babel">
+        // Creating a React component for the report
+        const Report = () => {
+            const [data, setData] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+
+            // Loading data from JSON file
+            React.useEffect(() => {
+                const fetchData = async () => {
+                    try {
+                        const jsonData = loadFileData('data.json');
+                        const parsedData = JSON.parse(jsonData);
+                        setData(parsedData);
+                        setLoading(false);
+                    } catch (error) {
+                        console.error('Error loading data:', error);
+                        setLoading(false);
+                    }
+                };
+                fetchData();
+            }, []);
+
+            // Rendering loading message if data is not yet loaded
+            if (loading) {
+                return <div className="text-center text-2xl mt-10">Loading...</div>;
+            }
+
+            // Preparing data for charts
+            const { course, flavor, diet, state, region } = data;
+
+            // Formatting large numbers for display
+            const formatNumber = (num) => {
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+                return num;
+            };
+
+            // Interesting Fact: Highlighting the dominance of West India
+            const interestingFact = (
+                <div className="bg-blue-100 p-4 rounded-lg mb-8">
+                    <h2 className="text-xl font-bold text-blue-800">Interesting Fact</h2>
+                    <p className="text-gray-700">
+                        West India leads with ~60 dishes, showcasing its rich culinary diversity, particularly in desserts like Mysore Pak and snacks like Namakpara. This region's prominence may reflect its cultural emphasis on vibrant, spiced flavors.
+                    </p>
+                </div>
+            );
+
+            // Creating bar chart component
+            const BarChart = ({ data, title, dataKey }) => (
+                <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+                    <h2 className="text-xl font-bold mb-4">{title}</h2>
+                    <Recharts.ResponsiveContainer width="100%" height={400}>
+                        <Recharts.BarChart data={data}>
+                            <Recharts.CartesianGrid strokeDasharray="3 3" />
+                            <Recharts.XAxis dataKey="name" />
+                            <Recharts.YAxis tickFormatter={formatNumber} />
+                            <Recharts.Tooltip formatter={formatNumber} />
+                            <Recharts.Legend />
+                            <Recharts.Bar dataKey={dataKey} fill="#4f46e5" />
+                        </Recharts.BarChart>
+                    </Recharts.ResponsiveContainer>
+                </div>
+            );
+
+            // Creating pie chart for diet distribution
+            const DietPieChart = () => (
+                <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+                    <h2 className="text-xl font-bold mb-4">Diet Distribution</h2>
+                    <Recharts.ResponsiveContainer width="100%" height={400}>
+                        <Recharts.PieChart>
+                            <Recharts.Pie
+                                data={diet}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={150}
+                                fill="#4f46e5"
+                                label
+                            >
+                                {diet.map((entry, index) => (
+                                    <Recharts.Cell key={`cell-${index}`} fill={['#4f46e5', '#10b981'][index % 2]} />
+                                ))}
+                            </Recharts.Pie>
+                            <Recharts.Tooltip formatter={formatNumber} />
+                            <Recharts.Legend />
+                        </Recharts.PieChart>
+                    </Recharts.ResponsiveContainer>
+                </div>
+            );
+
+            // Rendering the complete report
+            return (
+                <div className="max-w-6xl mx-auto">
+                    <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+                        Indian Cuisine Insights Report
+                    </h1>
+                    {interestingFact}
+                    <BarChart data={course} title="Course Distribution" dataKey="value" />
+                    <BarChart data={flavor} title="Flavor Profile Distribution" dataKey="value" />
+                    <DietPieChart />
+                    <BarChart data={state} title="State Distribution" dataKey="value" />
+                    <BarChart data={region} title="Region Distribution" dataKey="value" />
+                </div>
+            );
+        };
+
+        // Rendering the report using createRoot
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Report />);
+    </script>
+</body>
+</html>
