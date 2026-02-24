@@ -1,0 +1,56 @@
+2026-01-28 20:54:16,210 - INFO - Dataset loaded with 1338 rows and 8 columns.
+2026-01-28 20:54:16,211 - INFO - Performing data validation and summary.
+2026-01-28 21:00:54,534 - INFO - Detected 139 outliers in expenses.
+2026-01-28 21:01:56,198 - WARNING - Image export failed: 
+Image export using the "kaleido" engine requires the Kaleido package,
+which can be installed using pip:
+
+    $ pip install --upgrade kaleido
+. Install 'kaleido' to enable.
+2026-01-28 21:01:56,323 - INFO - Model saved successfully: insurance_expenses_model_20260128_210156.pkl
+2026-01-28 21:01:56,330 - INFO - Analysis and Reporting cycle completed successfully.
+2026-01-28 21:16:28,369 - INFO - Starting Hyperparameter Optimization...
+2026-01-28 21:17:14,506 - INFO - Final Tuned Performance: R² = 0.5744, RMSE = 5152.69
+2026-01-28 21:17:34,550 - INFO - Starting Hyperparameter Optimization...
+2026-01-28 21:18:14,370 - INFO - Final Tuned Performance: R² = 0.5744, RMSE = 5152.69
+2026-01-28 21:19:21,903 - INFO - Final tuned model saved as: tuned_insurance_model_20260128.joblib
+2026-01-28 21:19:33,337 - INFO - Final tuned model saved as: tuned_insurance_model_20260128.joblib
+2026-01-28 21:21:09,695 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-01-28 21:21:13,510 - INFO - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 503 Service Unavailable"
+2026-01-28 21:22:04,874 - INFO - HTTP Request: GET http://127.0.0.1:7861/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-01-28 21:22:05,015 - INFO - HTTP Request: HEAD http://127.0.0.1:7861/ "HTTP/1.1 200 OK"
+2026-01-28 21:22:06,711 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-01-28 21:27:07,750 - INFO - Retraining model with Log-Transformed target...
+2026-01-28 21:28:25,091 - INFO - Training Advanced Stacking Regressor...
+2026-01-28 21:29:56,213 - INFO - Training Advanced Stacking Regressor...
+2026-01-28 21:30:09,376 - INFO - Comparing different scaling strategies...
+2026-01-28 21:30:13,893 - INFO - Final pipeline updated with RobustScaler.
+2026-01-28 21:31:39,050 - INFO - Training Deep Learning Model (ANN)...
+2026-01-28 21:34:35,969 - INFO - Training Quantile Models (Median and 90th Percentile)...
+2026-01-28 21:36:51,980 - INFO - Retraining Ensemble with Sample Weights...
+2026-01-28 21:37:50,134 - INFO - Generating SHAP values for the champion model...
+2026-01-28 21:38:32,138 - INFO - Feature names successfully extracted using get_feature_names_out.
+2026-01-29 16:00:50,701 - INFO - Dataset loaded with 1338 rows and 8 columns.
+2026-01-29 16:00:50,704 - INFO - Performing data validation and summary.
+2026-01-29 16:00:54,320 - INFO - Detected 139 outliers in expenses.
+2026-01-29 16:01:07,786 - WARNING - Image export failed: 
+Image export using the "kaleido" engine requires the Kaleido package,
+which can be installed using pip:
+
+    $ pip install --upgrade kaleido
+. Install 'kaleido' to enable.
+2026-01-29 16:01:07,841 - INFO - Model saved successfully: insurance_expenses_model_20260129_160107.pkl
+2026-01-29 16:01:07,846 - INFO - Analysis and Reporting cycle completed successfully.
+2026-01-29 16:01:07,865 - INFO - Starting Hyperparameter Optimization...
+2026-01-29 16:01:48,626 - INFO - Final Tuned Performance: R² = 0.5744, RMSE = 5152.69
+2026-01-29 16:01:48,677 - INFO - Final tuned model saved as: tuned_insurance_model_20260129.joblib
+2026-01-29 16:02:03,832 - INFO - HTTP Request: GET http://127.0.0.1:7861/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-01-29 16:02:04,138 - INFO - HTTP Request: HEAD http://127.0.0.1:7861/ "HTTP/1.1 200 OK"
+2026-01-29 16:02:04,190 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-01-29 16:02:05,434 - INFO - Retraining model with Log-Transformed target...
+2026-01-29 16:02:08,692 - INFO - Training Advanced Stacking Regressor...
+2026-01-29 16:02:12,037 - INFO - Comparing different scaling strategies...
+2026-01-29 16:02:15,811 - INFO - Final pipeline updated with RobustScaler.
+2026-01-29 16:02:15,855 - INFO - Training Deep Learning Model (ANN)...
+2026-01-29 16:02:37,456 - INFO - Training Quantile Models (Median and 90th Percentile)...
+2026-01-29 16:02:40,380 - INFO - Retraining Ensemble with Sample Weights...

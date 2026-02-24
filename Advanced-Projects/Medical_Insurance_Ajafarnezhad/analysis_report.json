@@ -1,0 +1,15 @@
+{
+    "Metadata": {
+        "Timestamp": "2026-01-29 16:01:07",
+        "Rows_Analyzed": 1199
+    },
+    "Performance_Metrics": {
+        "Test_R2": 0.8513605798912244,
+        "Test_RMSE": 3045.0239378381207,
+        "CV_R2": 0.5894254618276534
+    },
+    "Inference_Stats": {
+        "Outliers_Handled": 139,
+        "Top_Feature": "bmi"
+    }
+}
