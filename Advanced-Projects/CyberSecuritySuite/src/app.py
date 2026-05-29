@@ -6,9 +6,11 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from blueprints.auth import auth_bp
-from blueprints.scanner import scanner_bp
-from blueprints.chat import chat_bp
+
+from blueprints.blueprints_auth import auth_bp
+from blueprints.blueprints_scanner import scanner_bp
+from blueprints.blueprints_chat import chat_bp
+
 from utils.logger import setup_logger
 from config import Config
 
