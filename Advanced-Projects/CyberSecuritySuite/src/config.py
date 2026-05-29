@@ -1,5 +1,7 @@
 # config.py - Application configuration
 # Follows PEP 8: Uppercase constants, descriptive names
+import os
+import logging
 
 import os
 
